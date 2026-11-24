@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estante de códigos</title>
+<style>
+:root{--bg:#eef1ef;--card:#fff;--ink:#16221d;--mute:#5d6b65;--line:#d5dcd8;--accent:#0e6a60;--accent-ink:#fff;--warn:#a3341f}
+@media(prefers-color-scheme:dark){:root{--bg:#121917;--card:#1b2420;--ink:#e6eee9;--mute:#98a8a0;--line:#2e3a35;--accent:#4cc2b0;--accent-ink:#06211c;--warn:#ff8f78}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2{font-family:"Iowan Old Style",Palatino,Georgia,serif;margin:0;font-weight:600}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 48px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:20px}
+h1{font-size:2rem;letter-spacing:-.01em}
+button,select,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);padding:8px 14px;border-radius:6px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.danger{color:var(--warn)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.busca{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.busca label{font-weight:600;display:block;margin-bottom:6px}
+textarea,select,input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:9px 10px}
+textarea{min-height:76px;resize:vertical}
+.acoes{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.acoes small{color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;font-size:.9rem}
+.chip{padding:2px 10px;border-radius:99px;background:var(--accent);color:var(--accent-ink)}
+.chip.rel{background:transparent;color:var(--mute);border:1px dashed var(--mute)}
+.chips .rotulo{color:var(--mute);align-self:center}
+main{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px;margin-top:20px;align-items:start}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+.col-lista h2,.ficha h2{font-size:1.35rem}
+#lista{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+#lista button{width:100%;text-align:left;display:block;padding:10px 12px 10px 16px;border-left:6px solid var(--lomb);border-radius:4px 8px 8px 4px;background:var(--card)}
+#lista button[aria-current=true]{outline:2px solid var(--accent)}
+.n{font-weight:600}.sub{color:var(--mute);font-size:.88rem}
+.barra{height:4px;background:var(--line);border-radius:2px;margin-top:6px}.barra i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.ach{font-size:.8rem;color:var(--mute);margin-top:4px}
+.ficha{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;position:sticky;top:12px}
+dl{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;margin:16px 0}
+dt{color:var(--mute)}dd{margin:0;overflow-wrap:anywhere}
+a{color:var(--accent)}
+.vazio{color:var(--mute);padding:12px 0}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);width:min(560px,94vw);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.campo{margin-bottom:10px}.campo label{display:block;font-size:.9rem;color:var(--mute)}
+.erro{color:var(--warn);min-height:1.4em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Estante de códigos</h1><div class="acoes" style="margin:0"><button id="entrar" hidden>Entrar como editor</button><button id="novo" class="primary" hidden>Novo módulo</button></div></header>
+
+  <section class="busca">
+    <label for="texto">Descreva o que você precisa construir</label>
+    <textarea id="texto" placeholder="Ex.: quero receber pagamentos por PIX e avisar o cliente por e-mail"></textarea>
+    <div class="acoes"><button id="buscar" class="primary">Buscar módulos</button><button id="limpar">Limpar</button><small>Ctrl + Enter também busca</small></div>
+    <div id="chips" class="chips" aria-live="polite"></div>
+  </section>
+
+  <main>
+    <section class="col-lista">
+      <label for="cat" class="sub">Categoria</label>
+      <select id="cat"></select>
+      <h2 id="titulo" style="margin-top:16px"></h2>
+      <ul id="lista"></ul>
+    </section>
+    <article class="ficha" id="ficha"><p class="vazio">Escolha um módulo na lista para ver os detalhes.</p></article>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <form id="form">
+    <h2 id="dlgTitulo"></h2>
+    <div class="campo"><label for="f_nome">Nome</label><input id="f_nome" required></div>
+    <div class="campo"><label for="f_descricao">Descrição</label><textarea id="f_descricao" required></textarea></div>
+    <div class="campo"><label for="f_id_categoria">Categoria</label><select id="f_id_categoria"></select></div>
+    <div class="campo"><label for="f_tecnologia">Tecnologia</label><input id="f_tecnologia"></div>
+    <div class="campo"><label for="f_versao">Versão</label><input id="f_versao"></div>
+    <div class="campo"><label for="f_status">Status</label><select id="f_status"><option>Ativo</option><option>Inativo</option></select></div>
+    <div class="campo"><label for="f_link">Link</label><input id="f_link" type="url" placeholder="https://"></div>
+    <div class="campo"><label for="f_documentacao">Documentação</label><input id="f_documentacao" type="url" placeholder="https://"></div>
+    <div class="campo"><label for="f_id_usuario">Criado por</label><select id="f_id_usuario"></select></div>
+    <div class="erro" id="erro" role="alert"></div>
+    <div class="acoes"><button class="primary">Salvar módulo</button><button type="button" id="cancelar">Cancelar</button></div>
+  </form>
+</dialog>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cor = id => `hsl(${(id * 47) % 360} 45% 42%)`;
+const api = async (url, opts) => {
+  const tk = sessionStorage.getItem("token");
+  const r = await fetch(url, opts && {...opts, headers: {"Content-Type": "application/json", ...(tk && {Authorization: "Bearer " + tk})}, body: opts.body && JSON.stringify(opts.body)});
+  if (r.status === 204) return null;
+  const d = await r.json(); if (!r.ok) throw new Error(d.erro || "Falha na requisição."); return d;
+};
+const CAMPOS = ["nome","descricao","id_categoria","tecnologia","versao","status","link","documentacao","id_usuario"];
+let protegido = false, editor = false, cats = [], users = [], itens = [], buscando = false, selecionado = null, editando = null;
+
+function pintar() {
+  editor = !protegido || !!sessionStorage.getItem("token");
+  $("novo").hidden = !editor; $("entrar").hidden = !protegido;
+  $("entrar").textContent = editor ? "Sair do modo editor" : "Entrar como editor";
+}
+$("entrar").onclick = async () => {
+  if (editor) { sessionStorage.removeItem("token"); pintar(); return selecionado && ficha(selecionado); }
+  const t = prompt("Token de editor:"); if (!t) return;
+  sessionStorage.setItem("token", t);
+  try { await api("/api/sessao", {method: "POST", body: {}}); pintar(); selecionado && ficha(selecionado); }
+  catch { sessionStorage.removeItem("token"); alert("Token inválido."); }
+};
+async function init() {
+  protegido = (await api("/api/config")).protegido; pintar();
+  [cats, users] = await Promise.all([api("/api/categorias"), api("/api/usuarios")]);
+  $("cat").innerHTML = `<option value="">Todas as categorias</option>` + cats.map(c => `<option value="${c.id}">${esc(c.nome)} (${c.total})</option>`).join("");
+  $("f_id_categoria").innerHTML = cats.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
+  $("f_id_usuario").innerHTML = `<option value="">—</option>` + users.map(u => `<option value="${u.id}">${esc(u.profissional)}</option>`).join("");
+  carregar();
+}
+
+async function carregar() {
+  buscando = false; $("chips").innerHTML = "";
+  itens = await api("/api/modulos" + ($("cat").value ? `?categoria_id=${$("cat").value}` : ""));
+  $("titulo").textContent = `${itens.length} módulos`; desenhar();
+}
+
+async function buscar() {
+  const texto = $("texto").value.trim(); if (!texto) return carregar();
+  const d = await api("/api/busca", {method: "POST", body: {texto, categoria_id: $("cat").value ? +$("cat").value : null}});
+  buscando = true; itens = d.resultados;
+  $("chips").innerHTML = d.palavras_chave.length
+    ? `<span class="rotulo">Palavras-chave:</span>` + d.palavras_chave.map(p => `<span class="chip">${esc(p)}</span>`).join("")
+      + (d.relacionadas.length ? `<span class="rotulo">Também considerei:</span>` + d.relacionadas.slice(0, 10).map(p => `<span class="chip rel">${esc(p)}</span>`).join("") : "")
+    : `<span class="rotulo">Não encontrei palavras-chave. Descreva com um pouco mais de detalhe.</span>`;
+  $("titulo").textContent = d.total ? `${d.total} módulos compatíveis` : "Nenhum módulo compatível"; desenhar();
+}
+
+function desenhar() {
+  $("lista").innerHTML = itens.length ? itens.map(m => `
+    <li><button data-id="${m.id}" style="--lomb:${cor(m.id_categoria)}" ${m.id === selecionado ? 'aria-current="true"' : ""}>
+      <div class="n">${esc(m.nome)}</div><div class="sub">${esc(m.categoria)} · ${esc(m.tecnologia)}</div>
+      ${buscando ? `<div class="barra"><i style="width:${m.relevancia}%"></i></div><div class="ach">${m.encontrados.map(e => esc(e.termo) + (e.relacionado ? " (relacionado)" : "")).join(", ")}</div>` : ""}
+    </button></li>`).join("") : `<li class="vazio">Nenhum módulo por aqui. Tente outras palavras ou outra categoria.</li>`;
+}
+
+async function ficha(id) {
+  selecionado = id; desenhar();
+  const m = await api(`/api/modulos/${id}`);
+  const lk = u => u ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u)}</a>` : "—";
+  $("ficha").innerHTML = `<h2>${esc(m.nome)}</h2><dl>
+    <dt>Categoria</dt><dd>${esc(m.categoria)}</dd><dt>Descrição</dt><dd>${esc(m.descricao)}</dd>
+    <dt>Tecnologia</dt><dd>${esc(m.tecnologia) || "—"}</dd><dt>Versão</dt><dd>${esc(m.versao) || "—"}</dd>
+    <dt>Status</dt><dd>${esc(m.status)}</dd><dt>Link</dt><dd>${lk(m.link)}</dd>
+    <dt>Documentação</dt><dd>${lk(m.documentacao)}</dd><dt>Criado por</dt><dd>${esc(m.criado_por) || "—"}</dd></dl>
+    ${editor ? '<div class="acoes"><button id="editar">Editar</button><button id="apagar" class="danger">Excluir</button></div>' : ""}`;
+  if (!editor) return;
+  $("editar").onclick = () => abrir(m);
+  $("apagar").onclick = async () => {
+    if (!confirm(`Excluir o módulo "${m.nome}"?`)) return;
+    await api(`/api/modulos/${m.id}`, {method: "DELETE"}); selecionado = null;
+    $("ficha").innerHTML = `<p class="vazio">Módulo excluído.</p>`; await cats_e_lista();
+  };
+}
+
+async function cats_e_lista() {
+  cats = await api("/api/categorias"); const v = $("cat").value;
+  $("cat").innerHTML = `<option value="">Todas as categorias</option>` + cats.map(c => `<option value="${c.id}">${esc(c.nome)} (${c.total})</option>`).join("");
+  $("cat").value = v; buscando && $("texto").value.trim() ? buscar() : carregar();
+}
+
+function abrir(m) {
+  editando = m ? m.id : null; $("erro").textContent = "";
+  $("dlgTitulo").textContent = m ? "Editar módulo" : "Novo módulo";
+  CAMPOS.forEach(c => $("f_" + c).value = m ? (m[c] ?? "") : (c === "status" ? "Ativo" : ""));
+  $("dlg").showModal();
+}
+
+$("form").onsubmit = async e => {
+  e.preventDefault();
+  const body = Object.fromEntries(CAMPOS.map(c => [c, $("f_" + c).value || null]));
+  body.id_categoria = +body.id_categoria; body.id_usuario = body.id_usuario ? +body.id_usuario : null;
+  try {
+    const m = await api(editando ? `/api/modulos/${editando}` : "/api/modulos", {method: editando ? "PUT" : "POST", body});
+    $("dlg").close(); await cats_e_lista(); ficha(m.id);
+  } catch (err) { $("erro").textContent = err.message; }
+};
+$("lista").onclick = e => { const b = e.target.closest("button[data-id]"); if (b) ficha(+b.dataset.id); };
+$("cat").onchange = () => $("texto").value.trim() ? buscar() : carregar();
+$("buscar").onclick = buscar;
+$("limpar").onclick = () => { $("texto").value = ""; carregar(); };
+$("texto").onkeydown = e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) buscar(); };
+$("novo").onclick = () => abrir(null);
+$("cancelar").onclick = () => $("dlg").close();
+init();
+</script>
+</body>
+</html>

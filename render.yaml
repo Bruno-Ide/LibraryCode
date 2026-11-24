@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: estante-de-codigos
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 4 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DATABASE_URL   # string de conexão da Neon (você cola no painel)
+        sync: false
+      - key: ADMIN_TOKEN    # gerado automaticamente; é a "senha" de editor
+        generateValue: true
